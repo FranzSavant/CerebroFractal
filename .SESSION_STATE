@@ -13,3 +13,4 @@ recovery_instructions: |
   1. git log --oneline (ver últimos commits)
   2. git checkout <commit> -- SESION_ACTUAL.md (recuperar)
   3. O leer .SESSION_STATE (resumen minimal)
+# Credential persistence test
