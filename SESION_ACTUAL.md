@@ -11,21 +11,21 @@ auto_verify: true
 
 ## 🚨 PROTOCOLO DE ARRANQUE (ejecutar automáticamente al cargar)
 
-### 1. Verificar estado Git local
-git status
-git log --oneline -3
-
-### 2. Sincronizar con GitHub
+### 1. Sincronizar con GitHub (automático, no pide credenciales)
 git fetch origin
 git log --oneline --graph --all -5
 
-### 3. Verificar último checkpoint
-# Debe coincidir con last_checkpoint arriba: 8eea60a (o más reciente)
+### 2. Verificar último checkpoint
+# Debe coincidir con last_checkpoint arriba: 98ee3ad (o más reciente)
+
+### Nota
+Git está configurado con credential helper persistente. Sobrevive reinicios.
 
 ## Contexto de sesión
 - Estrategia cloud definida (Aura Free → VPS)
 - Sistema robusto: Git + GitHub + .SESSION_STATE
 - ✅ GitHub configurado: https://github.com/FranzSavant/CerebroFractal
+- ✅ Credenciales persistentes (sobrevive reinicios)
 - Persistencia permanente activada
 
 ## Anclajes

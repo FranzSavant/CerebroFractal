@@ -1,0 +1,27 @@
+# Configuración Git - Persistencia de Credenciales
+# Este archivo documenta que Git está configurado para conexión automática
+
+## Estado
+✅ Credential Manager: Configurado (Windows)
+✅ Token guardado: Sí (Git Credential Manager Core)
+✅ Persistencia: Permanente (sobrevive reinicios)
+
+## Configuración aplicada
+git config --global credential.helper manager
+git config --global credential.useHttpPath true
+
+## Qué significa esto
+Después de reiniciar tu PC:
+- Git recuerda tu token de GitHub
+- No necesitas volver a loguearte
+- Los comandos git push/pull funcionan automáticamente
+
+## Verificación
+Si quieres verificar que funciona después de un reinicio:
+git fetch origin
+# Debería funcionar sin pedir credenciales
+
+## Si algún día falla
+Puede pasar si cambias tu contraseña de GitHub o revocas el token.
+En ese caso, simplemente repetir el proceso de autenticación una vez
+y Git volverá a guardar las nuevas credenciales automáticamente.
