@@ -1,11 +1,11 @@
 ---
-session: "2026-04-11.01"
+session: "2026-04-10.03"
 topic: "mirror-pipeline"
 status: "active"
 layer: 4
 recovery_protocol: "github_auto"
 github_remote: "https://github.com/FranzSavant/CerebroFractal.git"
-last_checkpoint: "ab6dd9f"
+last_checkpoint: "[actualizar con nuevo commit]"
 auto_verify: true
 credential_persistence: "enabled"
 ---
@@ -23,10 +23,10 @@ git log --oneline --graph --all -5
 # Leer .PI_PROTOCOL antes de cualquier acción
 
 ## Contexto
-- Setup completo en sesión anterior (2026-04-10.02)
+- Setup completo (sesión 2026-04-10.02 archivada)
 - Neo4j Aura Free configurado y listo
-- Git/GitHub funcionando con persistencia automática
-- Hoy: Probar conexión e implementar mirror_pipeline.py
+- Decidimos seguir trabajando hoy mismo
+- Ahora: Probar conexión e implementar mirror_pipeline.py
 
 ## Anclajes
 - [decision] Protocolo AI-autónomo en .PI_PROTOCOL
@@ -36,17 +36,27 @@ git log --oneline --graph --all -5
 - [codigo] Implementar mirror_pipeline.py
 
 ## Última acción
-Sesión iniciada - listo para desarrollo de Capa 4 (mirror pipeline).
+Conexion a Neo4j Aura exitosa. Servidor 5.27-aura enterprise. Nodo de prueba creado.
 
 ## Siguiente acción pendiente
-Probar conexión a Neo4j usando credenciales de .env
+Implementar parser basico de Markdown → Neo4j (mirror_pipeline.py)
 
 ---
 
-## Para la AI (LEER ANTES DE ACTUAR)
-1. Leer .PI_PROTOCOL
-2. Verificar que .env existe y tiene credenciales Neo4j
-3. Instalar dependencias: pip install neo4j python-dotenv
-4. Probar conexión básica
-5. Documentar resultado en este archivo
-6. git commit + push automáticos
+## Estado actual de desarrollo
+
+### Fase: Prueba de conexión Neo4j - COMPLETADA
+- [x] Verificar .env existe
+- [x] Instalar neo4j-driver y python-dotenv
+- [x] Crear script de prueba de conexión (src/mirror_pipeline/test_connection.py)
+- [x] Ejecutar test - EXITOSO
+- [x] Documentar resultado
+
+### Resultado de conexión
+- URI: neo4j+s://d01e9743.databases.neo4j.io
+- Servidor: Neo4j Kernel 5.27-aura (enterprise)
+- Nodos existentes: 0 (base limpia)
+- Nodo de prueba creado exitosamente: 2026-04-10T17:23:16Z
+
+### Siguiente fase
+Implementar parser Markdown → estructura de grafo
