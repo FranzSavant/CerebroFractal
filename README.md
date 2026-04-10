@@ -1,0 +1,88 @@
+---
+project: "CerebroFractal"
+type: "project-master"
+created: "2026-04-10"
+---
+
+# 🧠 Cerebro Fractal
+
+**Arquitectura de IA Personal con Memoria Grafada**
+
+## 🚀 Cómo retomar el trabajo (IMPORTANTE)
+
+**Mañana cuando abras pi:**
+
+1. **Carga ÚNICAMENTE este archivo:** `SESION_ACTUAL.md`
+2. Lee el YAML frontmatter (3 líneas) + Contexto (4 bullets máx)
+3. Ahí está todo lo que necesitas para continuar sin pérdida de contexto
+
+**Si necesitas buscar algo específico de sesiones pasadas:**
+- Abre `INDEX.md` — tabla de sesiones con temas y anclajes
+
+---
+
+## 📁 Estructura del proyecto
+
+```
+CerebroFractal/
+├── README.md                 # Este archivo (estructura general)
+├── SESION_ACTUAL.md          # ← CARGAR ESTO AL INICIAR (working memory)
+├── INDEX.md                  # Índice de sesiones históricas
+├── docs/                     # Documentación de arquitectura
+│   ├── 00_vision_general.md
+│   ├── 01_capa5_boveda_humana.md
+│   ├── 02_capa4_espejo_neo4j.md
+│   ├── 03_capa3_multi_llm_hub.md
+│   ├── 04_capa2_orquestacion.md
+│   ├── 05_capa1_dashboard.md
+│   └── decisiones_tecnicas.md
+├── sesiones/                 # Historial de sesiones
+│   ├── _TEMPLATE.md          # Template para nuevas sesiones
+│   └── sesion_YYYY_MM_DD.md  # Archivos de sesiones pasadas
+├── src/                      # Código fuente
+├── vault_template/           # Template Obsidian (Capa 5)
+└── config/                   # Configuraciones
+```
+
+## 🏗️ Orden de implementación
+
+1. **Capa 5** → Estructura de carpetas Obsidian (`vault_template/`)
+2. **Capa 4** → Neo4j + Script espejo (`src/mirror_pipeline/`)
+3. **Capa 3** → LiteLLM Hub (`config/litellm/`)
+4. **Capa 2** → Motor de agentes (`src/backend/`)
+5. **Capa 1** → Dashboard Next.js (`src/dashboard/`)
+
+---
+
+## Convenciones de metadatos
+
+Todos los archivos `.md` usan YAML frontmatter mínimo:
+
+```yaml
+---
+session: "YYYY-MM-DD.NN"    # ID único
+topic: "nombre-tema"         # Para búsqueda rápida
+status: "active"             # active | paused | done
+layer: 0                     # 1-5 o null
+---
+```
+
+**Anclajes dentro del contenido:**
+- `[decision]` — Decisiones técnicas importantes
+- `[codigo]` — Implementaciones o cambios de código
+- `[bug]` — Problemas conocidos o blockers
+- `[idea]` — Ideas pendientes de explorar
+
+**Secciones estándar:**
+- `## Contexto` — Máximo 4 bullets, estado actual
+- `## Anclajes` — Puntos de búsqueda rápida
+- `## Última acción` — 1 línea, qué acabamos de hacer
+- `## Siguiente acción pendiente` — Qué toca hacer
+
+---
+
+## Estado del proyecto
+
+Ver `SESION_ACTUAL.md` para estado en tiempo real.
+
+Resumen histórico en `INDEX.md`.

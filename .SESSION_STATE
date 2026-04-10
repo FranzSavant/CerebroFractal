@@ -1,0 +1,11 @@
+session_id: "2026-04-10.02"
+topic: "arquitectura-cloud"
+status: "active"
+last_update: "2026-04-10T22:30:00"
+layer: 4
+action_current: "Definiendo estrategia de checkpointing robusto"
+action_next: "Implementar auto-guardado incremental"
+blockers: []
+checkpoints:
+  - "22:15 - Decidida estrategia Neo4j Aura → VPS"
+  - "22:30 - Reconocida fragilidad del sistema de sesiones"

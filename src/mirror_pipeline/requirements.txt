@@ -1,0 +1,18 @@
+# Mirror Pipeline — Cerebro Fractal
+# Sincronización Obsidian → Neo4j
+
+# Monitoreo de sistema de archivos
+watchdog>=4.0.0
+
+# Driver de Neo4j
+neo4j>=5.20.0
+
+# Parsing de YAML (frontmatter)
+PyYAML>=6.0
+
+# Futuro: parsing avanzado de Markdown
+# mistune>=3.0.0
+
+# Futuro: LlamaIndex para Property Graph
+# llama-index>=0.10.0
+# llama-index-graph-stores-neo4j>=0.1.0
