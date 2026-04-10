@@ -4,7 +4,7 @@ topic: "arquitectura-cloud"
 status: "active"
 layer: 4
 recovery_protocol: "github_auto"
-github_remote: "PENDING_SETUP"  # Reemplazar con https://github.com/TU_USUARIO/CerebroFractal.git
+github_remote: "https://github.com/FranzSavant/CerebroFractal.git"
 last_checkpoint: "5d980bb"
 auto_verify: true
 ---
@@ -15,18 +15,18 @@ auto_verify: true
 git status
 git log --oneline -3
 
-### 2. Si hay remote configurado, sincronizar
-git fetch origin 2>/dev/null || echo "No remote o sin internet"
+### 2. Sincronizar con GitHub
+git fetch origin
 git log --oneline --graph --all -5
 
 ### 3. Verificar último checkpoint
-# Debe coincidir con last_checkpoint arriba: 5d980bb
+# Debe coincidir con last_checkpoint arriba: 8eea60a (o más reciente)
 
 ## Contexto de sesión
 - Estrategia cloud definida (Aura Free → VPS)
-- Sistema robusto: Git + .SESSION_STATE + commits reales
-- Pendiente: Subir a GitHub para persistencia permanente
-- Ver .GITHUB_SETUP para instrucciones de configuración
+- Sistema robusto: Git + GitHub + .SESSION_STATE
+- ✅ GitHub configurado: https://github.com/FranzSavant/CerebroFractal
+- Persistencia permanente activada
 
 ## Anclajes
 - [decision] Neo4j Aura Free ahora, migrar a VPS en 6-12 meses (DT-007)
@@ -38,7 +38,7 @@ git log --oneline --graph --all -5
 Preparado sistema para recuperación automática mañana vía GitHub.
 
 ## Siguiente acción pendiente
-Usuario: Configurar GitHub remote (ver .GITHUB_SETUP). Luego: crear cuenta Neo4j Aura Free.
+Crear cuenta Neo4j Aura Free.
 
 ---
 
