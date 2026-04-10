@@ -5,7 +5,7 @@ status: "active"
 layer: 4
 recovery_protocol: "github_auto"
 github_remote: "https://github.com/FranzSavant/CerebroFractal.git"
-last_checkpoint: "3c4cf63"
+last_checkpoint: "[en progreso - fix encoding]"
 auto_verify: true
 credential_persistence: "enabled"
 ---
@@ -36,16 +36,24 @@ git log --oneline --graph --all -5
 - [codigo] Implementar mirror_pipeline.py
 
 ## Última acción
-Implementado y ejecutado mirror_pipeline.py - 6 notas, 11 tags, 20 relaciones sincronizadas a Neo4j.
+Configurada ruta real del vault (G:\Mi unidad\DriveSyncFiles\oBsidian Prueba). Encontrados 1383 archivos .md. Arreglando errores de encoding y nulls.
 
 ## Siguiente acción pendiente
-Implementar watchdog para sincronización automática (monitoreo de cambios en tiempo real)
+Ejecutar pipeline con vault real (1383 notas) y verificar sincronización exitosa
 
 ---
 
 ## Estado actual de desarrollo
 
-### Fase: Mirror Pipeline - COMPLETADA
+### Fase: Mirror Pipeline - EN PROGRESO (vault real)
+- [x] Configurar ruta real del vault en .env
+- [x] Detectar 1383 archivos Markdown en vault real
+- [x] Arreglar encoding UTF-8/Latin-1 para caracteres especiales (é, ó, í)
+- [x] Arreglar valores NULL en propiedades para Neo4j
+- [ ] Ejecutar sincronización completa del vault real
+- [ ] Verificar grafo en Neo4j Browser
+
+### Fase: Mirror Pipeline - COMPLETADA (template)
 - [x] Implementar parser Markdown completo (frontmatter, wikilinks, tags)
 - [x] Implementar Neo4jMirror (CRUD de nodos y relaciones)
 - [x] Implementar MirrorPipeline (orquestador)

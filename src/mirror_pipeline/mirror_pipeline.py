@@ -131,14 +131,18 @@ class Neo4jMirror:
         RETURN n
         """
         
+        # Limpiar valores que podrian ser None o contener nulls
+        tags = note_data['tags'] if note_data['tags'] else []
+        tags = [t for t in tags if t is not None]  # Filtrar None
+        
         self.session.run(query, 
             filepath=note_data['filepath'],
-            title=note_data['title'],
-            filename=note_data['filename'],
-            type=note_data['type'],
-            tags=note_data['tags'],
-            date_created=note_data['date_created'],
-            body_preview=note_data['body_preview']
+            title=note_data['title'] or '',
+            filename=note_data['filename'] or '',
+            type=note_data['type'] or 'Nota',
+            tags=tags,
+            date_created=note_data['date_created'] or '',
+            body_preview=note_data['body_preview'] or ''
         )
     
     def create_tag(self, tag_name: str):
