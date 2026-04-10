@@ -1,11 +1,11 @@
 ---
-session: "2026-04-10.02"
-topic: "setup-completo"
-status: "done"
+session: "2026-04-11.01"
+topic: "mirror-pipeline"
+status: "active"
 layer: 4
 recovery_protocol: "github_auto"
 github_remote: "https://github.com/FranzSavant/CerebroFractal.git"
-last_checkpoint: "b2583c8"
+last_checkpoint: "ab6dd9f"
 auto_verify: true
 credential_persistence: "enabled"
 ---
@@ -17,39 +17,36 @@ git fetch origin
 git log --oneline --graph --all -5
 
 ### 2. Verificar último checkpoint
-# Debe coincidir: b2583c8
+# Debe coincidir: ab6dd9f (o más reciente)
 
-## Contexto de sesión
-- ✅ Estructura de metadatos y navegación definida
-- ✅ Git + GitHub configurados con persistencia automática
-- ✅ Neo4j Aura Free creado y configurado (200k nodos)
-- ✅ Protocolo de interacción documentado (.PI_PROTOCOL)
-- ✅ Credenciales seguras en .env (ignorado por Git)
-- El AI sabe: documentar automáticamente, el usuario no guarda nada manualmente
+### 3. Verificar protocolo
+# Leer .PI_PROTOCOL antes de cualquier acción
+
+## Contexto
+- Setup completo en sesión anterior (2026-04-10.02)
+- Neo4j Aura Free configurado y listo
+- Git/GitHub funcionando con persistencia automática
+- Hoy: Probar conexión e implementar mirror_pipeline.py
 
 ## Anclajes
-- [decision] Neo4j Aura Free → VPS cuando 150k nodos (DT-007)
-- [decision] AI documenta automáticamente sin pedir permiso
-- [decision] Protocolo de interacción en .PI_PROTOCOL para futuras sesiones
-- [infraestructura] GitHub: https://github.com/FranzSavant/CerebroFractal
+- [decision] Protocolo AI-autónomo en .PI_PROTOCOL
 - [infraestructura] Neo4j: d01e9743.databases.neo4j.io
-- [config] .env con credenciales (ignorado), .env.example como template
+- [infraestructura] GitHub: https://github.com/FranzSavant/CerebroFractal
+- [codigo] Probar conexión Neo4j desde Python
+- [codigo] Implementar mirror_pipeline.py
 
 ## Última acción
-Documentado protocolo completo de interacción en .PI_PROTOCOL y README.md.
+Sesión iniciada - listo para desarrollo de Capa 4 (mirror pipeline).
 
-## Siguiente acción (próxima sesión)
-Probar conexión Neo4j desde Python e implementar mirror_pipeline.py
+## Siguiente acción pendiente
+Probar conexión a Neo4j usando credenciales de .env
 
 ---
 
-## Para la AI del futuro (LEER .PI_PROTOCOL PRIMERO)
-
-Este proyecto usa protocolo de documentación automática:
-1. Tú documentas, actualizas SESION_ACTUAL.md, haces git commit/push
-2. El usuario NO guarda archivos manualmente
-3. El usuario NO ejecuta comandos git
-4. Ver archivo .PI_PROTOCOL para reglas completas
-
-Si este archivo (SESION_ACTUAL.md) está corrupto: usar .SESSION_STATE
-Si todo falla: último commit en GitHub es la fuente de verdad.
+## Para la AI (LEER ANTES DE ACTUAR)
+1. Leer .PI_PROTOCOL
+2. Verificar que .env existe y tiene credenciales Neo4j
+3. Instalar dependencias: pip install neo4j python-dotenv
+4. Probar conexión básica
+5. Documentar resultado en este archivo
+6. git commit + push automáticos
