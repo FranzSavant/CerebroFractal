@@ -1,0 +1,102 @@
+---
+type: "meta-protocol"
+for: "future-ai-instances"
+status: "active"
+version: "1.0"
+---
+
+# PROTOCOLO DE INTERACCIÓN - CerebroFractal
+
+## Identidad del Usuario
+- **Nombre:** Francisco (Fran)
+- **Perfil:** Usuario delega todo lo automatizable a la AI
+- **Expectativa:** AI documenta, actualiza, gestiona archivos sin supervisión
+- **Regla de oro:** "Yo no voy a guardar nada"
+
+## Responsabilidades del AI (Automáticas, Sin Pedir Permiso)
+
+### 1. Documentación Continua
+- Después de CADA decisión técnica importante: commit inmediato
+- Después de CADA cambio arquitectónico: actualizar docs/ y SESION_ACTUAL.md
+- Los commits deben tener mensajes descriptivos del tipo: "checkpoint: [qué se hizo]"
+
+### 2. Estructura de Archivos Obligatoria
+- **SESION_ACTUAL.md:** Siempre actualizado. Es el único punto de entrada mañana.
+- **docs/decisiones_tecnicas.md:** Cada decisión técnica va aquí con ID (DT-XXX)
+- **sesiones/*.md:** Historial de sesiones pasadas (archivar SESION_ACTUAL.md al finalizar día)
+- **.SESSION_STATE:** Backup minimal YAML del estado actual
+
+### 3. Gestión Git (Automática)
+- `git add -A` después de cambios relevantes
+- `git commit -m "checkpoint: [descripción]"` 
+- `git push` para persistir en GitHub
+- El usuario NUNCA debe ejecutar git commands manualmente
+
+### 4. Metadatos en TODOS los archivos
+Cada archivo .md debe tener YAML frontmatter:
+```yaml
+---
+session: "YYYY-MM-DD.NN"
+topic: "nombre-del-tema"
+status: "active" | "paused" | "done"
+layer: 0-5 | null
+---
+```
+
+### 5. Anclajes para Navegación
+Dentro del contenido, usar anclajes:
+- `[decision]` - Decisiones técnicas
+- `[codision]` - Código implementado
+- `[bug]` - Problemas conocidos
+- `[pendiente]` - Acciones futuras
+
+### 6. Seguridad de Credenciales
+- NUNCA subir .env a GitHub (ya está en .gitignore)
+- Las credenciales solo existen en archivos .env locales
+- Si se pierden, el usuario las regenera desde el proveedor (no culpa del AI)
+
+## Prohibiciones (NO hacer)
+
+❌ Pedirle al usuario que "guarde" algo manualmente
+❌ Pedirle al usuario que ejecute git commands
+❌ Dejar SESION_ACTUAL.md desactualizado al finalizar
+❌ Subir credenciales a GitHub
+❌ Preguntar "¿quieres que documente esto?" - Documentar siempre
+
+## Checklist de Cierre de Sesión
+
+Antes de que el usuario se vaya:
+- [ ] SESION_ACTUAL.md actualizado con última acción
+- [ ] SESION_ACTUAL.md tiene status correcto (active/paused/done)
+- [ ] git commit realizado con cambios del día
+- [ ] git push realizado (persistencia GitHub)
+- [ ] Si la sesión terminó: archivar como sesiones/sesion_YYYY_MM_DD.md
+
+## Primer Contacto (Mañana)
+
+Cuando el usuario cargue SESION_ACTUAL.md mañana:
+1. Leer YAML frontmatter (3 líneas)
+2. Ejecutar automáticamente: `git fetch origin && git log --oneline -5`
+3. Asumir que el usuario quiere continuar desde donde se quedó
+4. NO preguntar "¿qué hacemos?" - Leer la sección "Siguiente acción pendiente"
+5. Proceder directamente a esa acción o preguntar por clarificación si es ambigua
+
+## Contexto del Proyecto
+
+- **Nombre:** CerebroFractal
+- **Arquitectura:** 5 capas (Obsidian → Neo4j → LiteLLM → Agentes → Dashboard)
+- **Fase actual:** Capa 4 (Neo4j espejo) - Ver SESION_ACTUAL.md
+- **GitHub:** https://github.com/FranzSavant/CerebroFractal
+- **Meta:** Sistema de memoria personal para toda la vida del usuario
+
+## Si el Usuario Dice "Terminamos" o Se Va
+
+1. Actualizar SESION_ACTUAL.md con última acción
+2. Cambiar status a "paused" si hay pendientes, "done" si se completó
+3. git add -A && git commit -m "checkpoint: [resumen del día]"
+4. git push
+5. Archivar sesión en sesiones/ si corresponde
+
+---
+
+**Este archivo es la biblia.** Léelo siempre al inicio hasta que esté internalizado.

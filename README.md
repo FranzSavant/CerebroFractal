@@ -2,11 +2,27 @@
 project: "CerebroFractal"
 type: "project-master"
 created: "2026-04-10"
+last_updated: "2026-04-10"
 ---
 
 # 🧠 Cerebro Fractal
 
 **Arquitectura de IA Personal con Memoria Grafada**
+
+## 🚨 INSTRUCCIONES PARA LA AI (LEER PRIMERO)
+
+**Antes de cualquier otra cosa, lee:**
+1. `.PI_PROTOCOL` - Protocolo de interacción con el usuario
+2. `SESION_ACTUAL.md` - Estado actual del proyecto
+3. Ejecutar automáticamente: `git fetch origin && git log --oneline -5`
+
+**Reglas fundamentales:**
+- El usuario NO guarda nada manualmente
+- El usuario NO ejecuta comandos git
+- TÚ documentas, actualizas, y persistes automáticamente
+- Ver `.PI_PROTOCOL` para checklist completo
+
+---
 
 ## 🚀 Cómo retomar el trabajo (IMPORTANTE)
 
@@ -15,6 +31,7 @@ created: "2026-04-10"
 1. **Carga ÚNICAMENTE este archivo:** `SESION_ACTUAL.md`
 2. Lee el YAML frontmatter (3 líneas) + Contexto (4 bullets máx)
 3. Ahí está todo lo que necesitas para continuar sin pérdida de contexto
+4. **NO** preguntes "¿qué hacemos?" - Lee "Siguiente acción pendiente" y procede
 
 **Si necesitas buscar algo específico de sesiones pasadas:**
 - Abre `INDEX.md` — tabla de sesiones con temas y anclajes
@@ -25,9 +42,14 @@ created: "2026-04-10"
 
 ```
 CerebroFractal/
-├── README.md                 # Este archivo (estructura general)
+├── README.md                 # Este archivo
+├── .PI_PROTOCOL              # ← AI: LEER ESTO PRIMERO SIEMPRE
 ├── SESION_ACTUAL.md          # ← CARGAR ESTO AL INICIAR (working memory)
 ├── INDEX.md                  # Índice de sesiones históricas
+├── .env                      # Credenciales locales (IGNORADO POR GIT)
+├── .env.example              # Template de credenciales
+├── .gitignore                # Asegura que .env no suba a GitHub
+├── .GIT_CONFIG               # Configuración de credenciales persistentes
 ├── docs/                     # Documentación de arquitectura
 │   ├── 00_vision_general.md
 │   ├── 01_capa5_boveda_humana.md
@@ -71,7 +93,7 @@ layer: 0                     # 1-5 o null
 - `[decision]` — Decisiones técnicas importantes
 - `[codigo]` — Implementaciones o cambios de código
 - `[bug]` — Problemas conocidos o blockers
-- `[idea]` — Ideas pendientes de explorar
+- `[pendiente]` — Acciones futuras
 
 **Secciones estándar:**
 - `## Contexto` — Máximo 4 bullets, estado actual
@@ -84,5 +106,12 @@ layer: 0                     # 1-5 o null
 ## Estado del proyecto
 
 Ver `SESION_ACTUAL.md` para estado en tiempo real.
-
 Resumen histórico en `INDEX.md`.
+
+---
+
+## Nota de seguridad
+
+- **`.env`** contiene credenciales reales. NUNCA subir a GitHub.
+- **`.env.example`** es el template seguro (se sube a GitHub).
+- Si se pierde `.env`, regenerar credenciales desde el proveedor correspondiente.
