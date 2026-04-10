@@ -5,8 +5,9 @@ status: "active"
 layer: 4
 recovery_protocol: "github_auto"
 github_remote: "https://github.com/FranzSavant/CerebroFractal.git"
-last_checkpoint: "5d980bb"
+last_checkpoint: "425ae44"
 auto_verify: true
+credential_persistence: "enabled"
 ---
 
 ## 🚨 PROTOCOLO DE ARRANQUE (ejecutar automáticamente al cargar)
@@ -16,10 +17,11 @@ git fetch origin
 git log --oneline --graph --all -5
 
 ### 2. Verificar último checkpoint
-# Debe coincidir con last_checkpoint arriba: 98ee3ad (o más reciente)
+# Debe coincidir con last_checkpoint arriba: 425ae44 (o más reciente)
 
 ### Nota
-Git está configurado con credential helper persistente. Sobrevive reinicios.
+Git está configurado con credential helper persistente (Windows Credential Manager).
+Sobrevive reinicios. Ver archivo `.GIT_CONFIG` para detalles.
 
 ## Contexto de sesión
 - Estrategia cloud definida (Aura Free → VPS)
@@ -30,12 +32,12 @@ Git está configurado con credential helper persistente. Sobrevive reinicios.
 
 ## Anclajes
 - [decision] Neo4j Aura Free ahora, migrar a VPS en 6-12 meses (DT-007)
-- [infraestructura] Git local inicializado, commits: a839e98, 5d980bb
-- [infraestructura] Pendiente: remote GitHub para acceso permanente
+- [infraestructura] GitHub conectado con credenciales persistentes
 - [sistema] Protocolo auto-verificación implementado
+- [config] Ver .GIT_CONFIG para configuración de credenciales
 
 ## Última acción
-Preparado sistema para recuperación automática mañana vía GitHub.
+Configuradas credenciales Git persistentes que sobreviven reinicios.
 
 ## Siguiente acción pendiente
 Crear cuenta Neo4j Aura Free.
