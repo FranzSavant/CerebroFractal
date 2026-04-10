@@ -1,11 +1,15 @@
 session_id: "2026-04-10.02"
 topic: "arquitectura-cloud"
 status: "active"
-last_update: "2026-04-10T22:30:00"
+last_update: "2026-04-10T22:35:00"
 layer: 4
-action_current: "Definiendo estrategia de checkpointing robusto"
-action_next: "Implementar auto-guardado incremental"
+action_current: "Checkpoint git realizado - sistema robusto implementado"
+action_next: "Crear cuenta Neo4j Aura Free"
 blockers: []
-checkpoints:
-  - "22:15 - Decidida estrategia Neo4j Aura → VPS"
-  - "22:30 - Reconocida fragilidad del sistema de sesiones"
+checkpoints_git:
+  - "a839e98 - DT-007 Neo4j Aura→VPS + sistema robusto de sesiones"
+recovery_instructions: |
+  Si SESION_ACTUAL.md está corrupto/perdido:
+  1. git log --oneline (ver últimos commits)
+  2. git checkout <commit> -- SESION_ACTUAL.md (recuperar)
+  3. O leer .SESSION_STATE (resumen minimal)

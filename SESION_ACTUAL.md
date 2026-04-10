@@ -6,19 +6,26 @@ layer: 4
 ---
 
 ## Contexto
-- Definida estrategia cloud para toda la vida del proyecto (10+ años)
-- Decisión: Neo4j Aura Free → VPS Hetzner (escalado gradual $0→$5→$10)
-- Estrategia datos híbridos: metadatos en grafo, contenido en Google Drive
-- Documentado en docs/decisiones_tecnicas.md (DT-007) y docs/02_capa4_espejo_neo4j.md
+- Estrategia cloud definida (Aura Free → VPS)
+- Sistema robusto implementado: Git + .SESSION_STATE + SESION_ACTUAL.md
+- Checkpoint realizado: commit a839e98
+- Todo estado respaldado en Git local
 
 ## Anclajes
 - [decision] Neo4j Aura Free ahora, migrar a VPS en 6-12 meses (DT-007)
-- [decision] Solo metadatos en grafo (~500 bytes/nota), contenido en Drive
-- [codigo] Mirror pipeline debe usar variables de entorno para fácil migración
-- [infraestructura] VPS Hetzner CX21 ($5.39/mes) como destino final
+- [infraestructura] Git init + primer commit (checkpoint real)
+- [sistema] .SESSION_STATE como respaldo minimal si todo falla
+- [codigo] Mirror pipeline debe usar variables de entorno
 
-## Última acción (1 línea)
-Documentada estrategia de infraestructura a largo plazo en docs/.
+## Última acción
+Implementado sistema robusto de checkpointing con Git.
 
 ## Siguiente acción pendiente
-Crear cuenta Neo4j Aura Free y configurar instancia inicial.
+Crear cuenta Neo4j Aura Free.
+
+---
+
+## Nota de recuperación (si ves esto sin contexto)
+Estado Git: `git log` muestra historial completo.
+Estado minimal: Ver archivo `.SESSION_STATE` en raíz.
+Último checkpoint: commit a839e98
