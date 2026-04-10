@@ -3,29 +3,45 @@ session: "2026-04-10.02"
 topic: "arquitectura-cloud"
 status: "active"
 layer: 4
+recovery_protocol: "github_auto"
+github_remote: "PENDING_SETUP"  # Reemplazar con https://github.com/TU_USUARIO/CerebroFractal.git
+last_checkpoint: "5d980bb"
+auto_verify: true
 ---
 
-## Contexto
+## 🚨 PROTOCOLO DE ARRANQUE (ejecutar automáticamente al cargar)
+
+### 1. Verificar estado Git local
+git status
+git log --oneline -3
+
+### 2. Si hay remote configurado, sincronizar
+git fetch origin 2>/dev/null || echo "No remote o sin internet"
+git log --oneline --graph --all -5
+
+### 3. Verificar último checkpoint
+# Debe coincidir con last_checkpoint arriba: 5d980bb
+
+## Contexto de sesión
 - Estrategia cloud definida (Aura Free → VPS)
-- Sistema robusto implementado: Git + .SESSION_STATE + SESION_ACTUAL.md
-- Checkpoint realizado: commit a839e98
-- Todo estado respaldado en Git local
+- Sistema robusto: Git + .SESSION_STATE + commits reales
+- Pendiente: Subir a GitHub para persistencia permanente
+- Ver .GITHUB_SETUP para instrucciones de configuración
 
 ## Anclajes
 - [decision] Neo4j Aura Free ahora, migrar a VPS en 6-12 meses (DT-007)
-- [infraestructura] Git init + primer commit (checkpoint real)
-- [sistema] .SESSION_STATE como respaldo minimal si todo falla
-- [codigo] Mirror pipeline debe usar variables de entorno
+- [infraestructura] Git local inicializado, commits: a839e98, 5d980bb
+- [infraestructura] Pendiente: remote GitHub para acceso permanente
+- [sistema] Protocolo auto-verificación implementado
 
 ## Última acción
-Implementado sistema robusto de checkpointing con Git.
+Preparado sistema para recuperación automática mañana vía GitHub.
 
 ## Siguiente acción pendiente
-Crear cuenta Neo4j Aura Free.
+Usuario: Configurar GitHub remote (ver .GITHUB_SETUP). Luego: crear cuenta Neo4j Aura Free.
 
 ---
 
-## Nota de recuperación (si ves esto sin contexto)
-Estado Git: `git log` muestra historial completo.
-Estado minimal: Ver archivo `.SESSION_STATE` en raíz.
-Último checkpoint: commit a839e98
+## Nota de recuperación de emergencia
+Si Git está roto: Ver archivo `.SESSION_STATE` (YAML legible).
+Si todo está roto: Los archivos docs/ contienen las decisiones permanentes.

@@ -1,0 +1,28 @@
+# Configuración GitHub (ejecutar UNA VEZ)
+
+## Paso 1: Crear repo en GitHub
+1. Ir a https://github.com/new
+2. Nombre: CerebroFractal
+3. Private (recomendado)
+4. NO inicializar con README (ya lo tenemos)
+5. Crear repositorio
+
+## Paso 2: Copiar estos comandos y ejecutar en terminal
+cd C:\Users\Fran\Desktop\CerebroFractal
+git remote add origin https://github.com/TU_USUARIO/CerebroFractal.git
+git branch -M main
+git push -u origin main
+
+## Paso 3: Actualizar SESION_ACTUAL.md
+Reemplazar GITHUB_REMOTE placeholder con la URL real.
+
+## Paso 4: Configurar token de acceso (para Pi)
+Opción A: GitHub Personal Access Token (classic)
+- Settings → Developer settings → Personal access tokens → Tokens (classic)
+- Generate new token (classic)
+- Scopes: repo (full control)
+- Copiar token y guardarlo en .env (nunca subir a git)
+
+Opción B: Dejar acceso manual (más seguro, menos automático)
+- No compartir credenciales
+- Pi solo lee local, pushes manuales por ti
