@@ -5,7 +5,7 @@ status: "active"
 layer: 4
 recovery_protocol: "github_auto"
 github_remote: "https://github.com/FranzSavant/CerebroFractal.git"
-last_checkpoint: "[actualizar con nuevo commit]"
+last_checkpoint: "f13e08e"
 auto_verify: true
 credential_persistence: "enabled"
 ---
