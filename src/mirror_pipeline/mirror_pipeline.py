@@ -1,401 +1,276 @@
 """
-Mirror Pipeline — Cerebro Fractal
-==================================
-Sincronización unidireccional: Obsidian (.md) → Neo4j (grafo)
-
-Monitorea la bóveda de Obsidian y espejea los cambios en Neo4j.
-Extrae: título, tags, wikilinks, frontmatter → nodos y relaciones.
-
-Uso:
-    python mirror_pipeline.py          # Modo watch (monitoreo continuo)
-    python mirror_pipeline.py --sync   # Sincronización completa una vez
+Mirror Pipeline - Obsidian Vault to Neo4j Graph
+Sesion: 2026-04-10.03
+Convierte archivos Markdown en nodos y relaciones de grafo.
 """
 
+import os
 import re
-import sys
-import time
 import yaml
-import logging
 from pathlib import Path
-from typing import Optional
-from dataclasses import dataclass, field
-
-from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler, FileModifiedEvent, FileCreatedEvent, FileDeletedEvent
+from datetime import datetime
+from typing import List, Dict, Optional, Tuple
 from neo4j import GraphDatabase
+from dotenv import load_dotenv
 
-from config import (
-    VAULT_ROOT, AGENT_ROOT, CHATS_SAVED, MICRO_CHATS,
-    NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD, NEO4J_DATABASE,
-    MIRROR_EXCLUDE_PATTERNS, WATCHED_EXTENSIONS,
-    LOG_LEVEL, LOG_FILE,
-)
+load_dotenv()
 
-# ============================================
-# LOGGING
-# ============================================
-
-logging.basicConfig(
-    level=getattr(logging, LOG_LEVEL),
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[
-        logging.FileHandler(LOG_FILE, encoding="utf-8"),
-        logging.StreamHandler(),
-    ],
-)
-logger = logging.getLogger("mirror_pipeline")
-
-
-# ============================================
-# DATA MODELS
-# ============================================
-
-@dataclass
-class ParsedNote:
-    """Resultado del parsing de un archivo .md"""
-    filepath: Path
-    title: str = ""
-    frontmatter: dict = field(default_factory=dict)
-    tags: list = field(default_factory=list)
-    wikilinks: list = field(default_factory=list)
-    node_type: str = "Nota"  # Nota, Chat, NotaAtomica, etc.
-    content_preview: str = ""
-    relative_path: str = ""
-
-
-# ============================================
-# MARKDOWN PARSER
-# ============================================
 
 class MarkdownParser:
-    """Extrae metadatos estructurados de archivos Markdown de Obsidian."""
-
-    # Regex para extraer frontmatter YAML (entre ---)
-    FRONTMATTER_RE = re.compile(r"^---\s*\n(.*?)\n---", re.DOTALL)
-
-    # Regex para extraer [[Wikilinks]] (con o sin alias)
-    WIKILINK_RE = re.compile(r"\[\[([^\]|]+)(?:\|[^\]]+)?\]\]")
-
-    # Regex para extraer #tags inline
-    INLINE_TAG_RE = re.compile(r"(?:^|\s)#([\w\-/]+)")
-
-    # Regex para extraer título del primer heading
-    HEADING_RE = re.compile(r"^#\s+(.+)$", re.MULTILINE)
-
-    def parse(self, filepath: Path) -> Optional[ParsedNote]:
-        """Parsea un archivo .md y retorna un ParsedNote o None si debe ignorarse."""
+    """Parsea archivos Markdown extrayendo frontmatter, wikilinks y tags."""
+    
+    @staticmethod
+    def parse_file(filepath: str) -> Optional[Dict]:
+        """Parsea un archivo Markdown y retorna dict con metadatos."""
         try:
-            content = filepath.read_text(encoding="utf-8")
+            with open(filepath, 'r', encoding='utf-8') as f:
+                content = f.read()
+            
+            return MarkdownParser.parse_content(content, filepath)
         except Exception as e:
-            logger.error(f"Error leyendo {filepath}: {e}")
+            print(f"[ERROR] No se pudo parsear {filepath}: {e}")
             return None
-
-        # Verificar si debe excluirse
-        if self._should_exclude(filepath):
-            logger.debug(f"Excluido por reglas: {filepath}")
-            return None
-
-        note = ParsedNote(filepath=filepath)
-        note.relative_path = str(filepath.relative_to(VAULT_ROOT))
-
-        # Extraer frontmatter YAML
-        fm_match = self.FRONTMATTER_RE.match(content)
-        if fm_match:
-            try:
-                note.frontmatter = yaml.safe_load(fm_match.group(1)) or {}
-            except yaml.YAMLError as e:
-                logger.warning(f"Error parseando YAML en {filepath}: {e}")
-                note.frontmatter = {}
-            # Quitar frontmatter del contenido para el resto del parsing
-            content_body = content[fm_match.end():]
+    
+    @staticmethod
+    def parse_content(content: str, filepath: str) -> Dict:
+        """Parsea contenido Markdown."""
+        # Extraer frontmatter
+        frontmatter = {}
+        body = content
+        
+        if content.startswith('---'):
+            parts = content.split('---', 2)
+            if len(parts) >= 3:
+                try:
+                    frontmatter = yaml.safe_load(parts[1]) or {}
+                    body = parts[2].strip()
+                except yaml.YAMLError:
+                    body = content
+        
+        # Extraer wikilinks [[...]]
+        wikilink_pattern = r'\[\[([^\]]+)\]\]'
+        wikilinks = re.findall(wikilink_pattern, body)
+        
+        # Extraer hashtags #tag (excluyendo headers markdown)
+        hashtag_pattern = r'(?:^|\s)#([a-zA-Z0-9_\-\/]+)'
+        hashtags = re.findall(hashtag_pattern, body)
+        
+        # Combinar tags del frontmatter y del body
+        frontmatter_tags = frontmatter.get('tags', []) or []
+        if isinstance(frontmatter_tags, str):
+            frontmatter_tags = [frontmatter_tags]
+        all_tags = list(set(frontmatter_tags + hashtags))
+        
+        # Extraer titulo
+        title = frontmatter.get('title', '')
+        if not title:
+            # Buscar primer H1
+            h1_match = re.search(r'^#\s+(.+)$', body, re.MULTILINE)
+            if h1_match:
+                title = h1_match.group(1).strip()
+            else:
+                # Usar nombre de archivo
+                title = Path(filepath).stem
+        
+        # Determinar tipo de nota
+        note_type = frontmatter.get('type', 'nota')
+        if 'nota_atomica' in str(filepath).lower() or note_type == 'nota_atomica':
+            note_type = 'NotaAtomica'
+        elif 'chat' in str(filepath).lower():
+            note_type = 'Chat'
+        elif 'micro_chat' in str(filepath).lower():
+            note_type = 'MicroChat'
         else:
-            content_body = content
-
-        # Extraer título (frontmatter > heading > filename)
-        note.title = (
-            note.frontmatter.get("title")
-            or self._extract_heading(content_body)
-            or filepath.stem
-        )
-
-        # Extraer tags (frontmatter + inline)
-        fm_tags = note.frontmatter.get("tags", [])
-        if isinstance(fm_tags, str):
-            fm_tags = [fm_tags]
-        inline_tags = self.INLINE_TAG_RE.findall(content_body)
-        note.tags = list(set(fm_tags + inline_tags))
-
-        # Extraer wikilinks
-        note.wikilinks = list(set(self.WIKILINK_RE.findall(content)))
-
-        # Determinar tipo de nodo
-        note.node_type = self._determine_node_type(filepath, note.frontmatter)
-
-        # Preview del contenido (primeros 200 chars sin frontmatter)
-        note.content_preview = content_body.strip()[:200]
-
-        return note
-
-    def _extract_heading(self, content: str) -> Optional[str]:
-        """Extrae el primer heading H1 del contenido."""
-        match = self.HEADING_RE.search(content)
-        return match.group(1).strip() if match else None
-
-    def _determine_node_type(self, filepath: Path, frontmatter: dict) -> str:
-        """Determina el tipo de nodo Neo4j basándose en la ruta y frontmatter."""
-        fm_type = frontmatter.get("type", "")
-
-        if fm_type == "chat_parent":
-            return "Chat"
-        elif fm_type == "chat_child":
-            return "MicroChat"  # No debería llegar aquí por exclusión
-        elif fm_type == "nota_atomica":
-            return "NotaAtomica"
-
-        # Por ruta
-        rel = str(filepath.relative_to(VAULT_ROOT))
-        if "notas_atomicas" in rel:
-            return "NotaAtomica"
-        elif ".chats_saved" in rel and "micro_chats" not in rel:
-            return "Chat"
-        elif "Outputs" in rel:
-            return "Output"
-        elif "Agentes" in rel:
-            return "Agente"
-        elif "Ideas" in rel:
-            return "Idea"
-
-        return "Nota"
-
-    def _should_exclude(self, filepath: Path) -> bool:
-        """Verifica si el archivo debe excluirse del espejeo."""
-        rel = str(filepath.relative_to(VAULT_ROOT))
-
-        # Excluir micro_chats
-        if "micro_chats" in rel:
-            return True
-
-        # Excluir archivos SKILL.md
-        if filepath.name == "SKILL.md":
-            return True
-
-        # Excluir carpeta .obsidian
-        if ".obsidian" in rel:
-            return True
-
-        # Excluir templates
-        if "_templates" in rel:
-            return True
-
-        return False
+            note_type = 'Nota'
+        
+        return {
+            'filepath': filepath,
+            'filename': Path(filepath).name,
+            'title': title,
+            'type': note_type,
+            'tags': all_tags,
+            'wikilinks': wikilinks,
+            'frontmatter': frontmatter,
+            'body_preview': body[:500] if body else '',
+            'date_created': frontmatter.get('date_captured', frontmatter.get('date_extracted', datetime.now().isoformat()))
+        }
 
 
-# ============================================
-# NEO4J WRITER
-# ============================================
-
-class Neo4jWriter:
-    """Escribe nodos y relaciones en Neo4j a partir de ParsedNotes."""
-
-    def __init__(self, uri: str, user: str, password: str, database: str = "neo4j"):
-        self.driver = GraphDatabase.driver(uri, auth=(user, password))
-        self.database = database
-        logger.info(f"Conectado a Neo4j en {uri}")
-
-    def close(self):
+class Neo4jMirror:
+    """Maneja la sincronizacion con Neo4j."""
+    
+    def __init__(self, uri: str, username: str, password: str):
+        self.driver = GraphDatabase.driver(uri, auth=(username, password))
+        self.session = None
+    
+    def __enter__(self):
+        self.session = self.driver.session()
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.session:
+            self.session.close()
         self.driver.close()
-        logger.info("Conexión Neo4j cerrada")
-
-    def upsert_note(self, note: ParsedNote):
-        """Crea o actualiza un nodo en Neo4j y sus relaciones."""
-        with self.driver.session(database=self.database) as session:
-            # 1. MERGE del nodo principal
-            session.execute_write(self._merge_node, note)
-
-            # 2. Crear relaciones por cada wikilink
-            for link_target in note.wikilinks:
-                session.execute_write(self._merge_link, note.title, link_target)
-
-            # 3. Crear/vincular tags como nodos
-            for tag in note.tags:
-                session.execute_write(self._merge_tag, note.title, tag)
-
-        logger.info(
-            f"✅ Espejeado: [{note.node_type}] {note.title} "
-            f"({len(note.wikilinks)} links, {len(note.tags)} tags)"
-        )
-
-    def delete_note(self, filepath: Path):
-        """Elimina un nodo del grafo cuando se borra el archivo fuente."""
-        title = filepath.stem
-        with self.driver.session(database=self.database) as session:
-            session.execute_write(self._delete_node, title)
-        logger.info(f"🗑️ Eliminado del grafo: {title}")
-
-    @staticmethod
-    def _merge_node(tx, note: ParsedNote):
-        """MERGE de un nodo con sus propiedades."""
+    
+    def clear_database(self):
+        """Limpia la base de datos (cuidado!)."""
+        self.session.run("MATCH (n) DETACH DELETE n")
+        print("[INFO] Base de datos limpiada")
+    
+    def create_note(self, note_data: Dict):
+        """Crea un nodo Nota en Neo4j."""
         query = """
-        MERGE (n {nombre: $title})
-        SET n:$node_type,
-            n.ruta = $path,
+        MERGE (n:Nota {filepath: $filepath})
+        SET n.title = $title,
+            n.filename = $filename,
+            n.type = $type,
             n.tags = $tags,
-            n.tipo_frontmatter = $fm_type,
-            n.preview = $preview,
-            n.ultima_sync = datetime()
+            n.date_created = $date_created,
+            n.body_preview = $body_preview,
+            n.last_synced = datetime()
+        RETURN n
         """
-        # Neo4j no permite labels dinámicos en MERGE directamente,
-        # así que usamos APOC o un enfoque de dos pasos
-        query = f"""
-        MERGE (n {{nombre: $title}})
-        SET n:{note.node_type},
-            n.ruta = $path,
-            n.tags = $tags,
-            n.tipo_frontmatter = $fm_type,
-            n.preview = $preview,
-            n.ultima_sync = datetime()
-        """
-        tx.run(
-            query,
-            title=note.title,
-            path=note.relative_path,
-            tags=note.tags,
-            fm_type=note.frontmatter.get("type", ""),
-            preview=note.content_preview,
+        
+        self.session.run(query, 
+            filepath=note_data['filepath'],
+            title=note_data['title'],
+            filename=note_data['filename'],
+            type=note_data['type'],
+            tags=note_data['tags'],
+            date_created=note_data['date_created'],
+            body_preview=note_data['body_preview']
         )
-
-    @staticmethod
-    def _merge_link(tx, source_title: str, target_title: str):
-        """MERGE de una relación MENCIONA entre dos nodos."""
+    
+    def create_tag(self, tag_name: str):
+        """Crea un nodo Tag."""
         query = """
-        MERGE (s {nombre: $source})
-        MERGE (t {nombre: $target})
-        MERGE (s)-[:MENCIONA]->(t)
+        MERGE (t:Tag {name: $name})
+        RETURN t
         """
-        tx.run(query, source=source_title, target=target_title)
-
-    @staticmethod
-    def _merge_tag(tx, note_title: str, tag: str):
-        """MERGE de un nodo Tag y relación TAGGED."""
+        self.session.run(query, name=tag_name)
+    
+    def link_note_to_tag(self, filepath: str, tag_name: str):
+        """Crea relacion entre Nota y Tag."""
         query = """
-        MERGE (n {nombre: $title})
-        MERGE (t:Tag {nombre: $tag})
-        MERGE (n)-[:TAGGED]->(t)
+        MATCH (n:Nota {filepath: $filepath})
+        MATCH (t:Tag {name: $tag_name})
+        MERGE (n)-[:HAS_TAG]->(t)
         """
-        tx.run(query, title=note_title, tag=tag)
-
-    @staticmethod
-    def _delete_node(tx, title: str):
-        """Elimina un nodo y todas sus relaciones."""
+        self.session.run(query, filepath=filepath, tag_name=tag_name)
+    
+    def link_notes(self, from_filepath: str, to_title: str):
+        """Crea relacion entre dos Notas via wikilink."""
+        # Buscar la nota destino por titulo o filename
         query = """
-        MATCH (n {nombre: $title})
-        DETACH DELETE n
+        MATCH (from:Nota {filepath: $from_filepath})
+        MATCH (to:Nota)
+        WHERE to.title = $to_title OR to.filename = $to_title + '.md'
+        MERGE (from)-[:LINKS_TO {type: 'wikilink'}]->(to)
         """
-        tx.run(query, title=title)
+        self.session.run(query, from_filepath=from_filepath, to_title=to_title)
+    
+    def get_stats(self) -> Dict:
+        """Retorna estadisticas del grafo."""
+        result = self.session.run("""
+            MATCH (n) 
+            RETURN labels(n)[0] as label, count(n) as count
+            ORDER BY count DESC
+        """)
+        return {record["label"]: record["count"] for record in result}
 
 
-# ============================================
-# FILE SYSTEM WATCHER
-# ============================================
+class MirrorPipeline:
+    """Pipeline completo: Vault -> Neo4j."""
+    
+    def __init__(self, vault_path: str, neo4j_uri: str, neo4j_user: str, neo4j_pass: str):
+        self.vault_path = Path(vault_path)
+        self.parser = MarkdownParser()
+        self.neo4j = Neo4jMirror(neo4j_uri, neo4j_user, neo4j_pass)
+    
+    def scan_vault(self) -> List[Dict]:
+        """Escanea todos los archivos .md en el vault."""
+        notes = []
+        md_files = list(self.vault_path.rglob("*.md"))
+        
+        print(f"[INFO] Encontrados {len(md_files)} archivos Markdown")
+        
+        for md_file in md_files:
+            # Ignorar archivos de plantilla o sistema si es necesario
+            if '.git' in str(md_file):
+                continue
+                
+            note_data = self.parser.parse_file(str(md_file))
+            if note_data:
+                notes.append(note_data)
+        
+        return notes
+    
+    def sync(self, clear_db: bool = False):
+        """Sincroniza el vault completo con Neo4j."""
+        with self.neo4j as db:
+            if clear_db:
+                db.clear_database()
+            
+            # 1. Escanear vault
+            notes = self.scan_vault()
+            print(f"[INFO] Parseadas {len(notes)} notas")
+            
+            # 2. Crear nodos Nota
+            for note in notes:
+                db.create_note(note)
+            print(f"[INFO] Creados {len(notes)} nodos Nota")
+            
+            # 3. Crear Tags y relaciones
+            all_tags = set()
+            for note in notes:
+                for tag in note['tags']:
+                    all_tags.add(tag)
+                    db.create_tag(tag)
+                    db.link_note_to_tag(note['filepath'], tag)
+            print(f"[INFO] Creados {len(all_tags)} nodos Tag")
+            
+            # 4. Crear relaciones entre notas (wikilinks)
+            link_count = 0
+            for note in notes:
+                for link in note['wikilinks']:
+                    # Limpiar alias si existe [[Nota|Alias]]
+                    clean_link = link.split('|')[0].strip()
+                    db.link_notes(note['filepath'], clean_link)
+                    link_count += 1
+            print(f"[INFO] Creadas {link_count} relaciones LINKS_TO")
+            
+            # 5. Estadisticas
+            stats = db.get_stats()
+            print(f"\n[RESUMEN] Estadisticas del grafo:")
+            for label, count in stats.items():
+                print(f"  - {label}: {count}")
 
-class VaultEventHandler(FileSystemEventHandler):
-    """Maneja eventos del sistema de archivos de la bóveda."""
-
-    def __init__(self, parser: MarkdownParser, writer: Neo4jWriter):
-        self.parser = parser
-        self.writer = writer
-
-    def on_created(self, event):
-        if not event.is_directory:
-            self._process_file(Path(event.src_path))
-
-    def on_modified(self, event):
-        if not event.is_directory:
-            self._process_file(Path(event.src_path))
-
-    def on_deleted(self, event):
-        if not event.is_directory:
-            filepath = Path(event.src_path)
-            if filepath.suffix in WATCHED_EXTENSIONS:
-                self.writer.delete_note(filepath)
-
-    def _process_file(self, filepath: Path):
-        """Procesa un archivo creado o modificado."""
-        if filepath.suffix not in WATCHED_EXTENSIONS:
-            return
-
-        note = self.parser.parse(filepath)
-        if note:
-            self.writer.upsert_note(note)
-
-
-# ============================================
-# SYNC COMPLETO (una vez)
-# ============================================
-
-def full_sync(parser: MarkdownParser, writer: Neo4jWriter):
-    """Escanea toda la bóveda y sincroniza todo con Neo4j."""
-    logger.info("=" * 60)
-    logger.info("SINCRONIZACIÓN COMPLETA INICIADA")
-    logger.info(f"Escaneando: {AGENT_ROOT}")
-    logger.info("=" * 60)
-
-    count = 0
-    for md_file in AGENT_ROOT.rglob("*.md"):
-        note = parser.parse(md_file)
-        if note:
-            writer.upsert_note(note)
-            count += 1
-
-    logger.info(f"Sincronización completa: {count} notas espejeadas")
-
-
-# ============================================
-# MAIN
-# ============================================
 
 def main():
-    parser = MarkdownParser()
-
-    # Verificar conexión a Neo4j
-    try:
-        writer = Neo4jWriter(NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD, NEO4J_DATABASE)
-    except Exception as e:
-        logger.error(f"No se pudo conectar a Neo4j: {e}")
-        logger.error("Asegúrate de que Neo4j esté corriendo.")
-        sys.exit(1)
-
-    try:
-        # ¿Sincronización completa o modo watch?
-        if "--sync" in sys.argv:
-            full_sync(parser, writer)
-        else:
-            # Primero: sync completo
-            full_sync(parser, writer)
-
-            # Luego: monitoreo continuo
-            logger.info("=" * 60)
-            logger.info("MODO WATCH ACTIVADO — Monitoreando cambios...")
-            logger.info(f"Carpeta: {AGENT_ROOT}")
-            logger.info("Presiona Ctrl+C para detener")
-            logger.info("=" * 60)
-
-            handler = VaultEventHandler(parser, writer)
-            observer = Observer()
-            observer.schedule(handler, str(AGENT_ROOT), recursive=True)
-            observer.start()
-
-            try:
-                while True:
-                    time.sleep(1)
-            except KeyboardInterrupt:
-                observer.stop()
-                logger.info("Watch detenido por el usuario")
-
-            observer.join()
-
-    finally:
-        writer.close()
+    """Funcion principal."""
+    print("=" * 60)
+    print("CEREBRO FRACTAL - Mirror Pipeline")
+    print("Obsidian Vault -> Neo4j Graph")
+    print("=" * 60)
+    
+    # Configuracion
+    VAULT_PATH = os.getenv("VAULT_PATH", r"C:\Users\Fran\Desktop\CerebroFractal\vault_template")
+    NEO4J_URI = os.getenv("NEO4J_URI")
+    NEO4J_USER = os.getenv("NEO4J_USERNAME")
+    NEO4J_PASS = os.getenv("NEO4J_PASSWORD")
+    
+    if not all([NEO4J_URI, NEO4J_USER, NEO4J_PASS]):
+        print("[ERROR] Faltan variables de entorno NEO4J_* en archivo .env")
+        return
+    
+    print(f"[CONFIG] Vault: {VAULT_PATH}")
+    print(f"[CONFIG] Neo4j: {NEO4J_URI}")
+    
+    # Ejecutar sync
+    pipeline = MirrorPipeline(VAULT_PATH, NEO4J_URI, NEO4J_USER, NEO4J_PASS)
+    pipeline.sync(clear_db=True)  # clear_db=True limpia primero
+    
+    print("\n[EXITO] Sincronizacion completada!")
 
 
 if __name__ == "__main__":
