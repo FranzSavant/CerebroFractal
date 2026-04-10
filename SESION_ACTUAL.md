@@ -5,7 +5,7 @@ status: "active"
 layer: 4
 recovery_protocol: "github_auto"
 github_remote: "https://github.com/FranzSavant/CerebroFractal.git"
-last_checkpoint: "c9d93f9"
+last_checkpoint: "[actualizar]"
 auto_verify: true
 credential_persistence: "enabled"
 ---
@@ -36,26 +36,34 @@ git log --oneline --graph --all -5
 - [codigo] Implementar mirror_pipeline.py
 
 ## Última acción
-Validado mirror_pipeline con 100 notas reales del vault. Pipeline funciona correctamente.
+- Validado mirror_pipeline con 100 notas
+- **Eliminadas notas de Neo4j** (0 nodos ahora)
+- Decisión: Esperar agente de transformación Cypher antes de resincronizar
 
 ## Siguiente acción pendiente
-Optimizar pipeline para 1383 notas (batch UNWIND) o implementar watchdog
+Diseñar agente intermedio (Pi) para transformación Markdown → Cypher enriquecido
 
 ---
 
 ## Estado actual de desarrollo
 
-### Fase: Mirror Pipeline - VALIDADO (100 notas)
+### Fase: Mirror Pipeline - PAUSADO
 - [x] Configurar ruta real del vault en .env
-- [x] Detectar 1383 archivos Markdown en vault real
-- [x] Arreglar encoding UTF-8/Latin-1
-- [x] Arreglar valores NULL en propiedades
-- [x] **Validar con 100 notas - EXITOSO**
-  - 100 notas sincronizadas
-  - 3 tags creados
-  - Grafo visible en https://console.neo4j.io
-- [ ] Optimizar para vault completo (1383 notas) - requiere batch UNWIND
-- [ ] Implementar watchdog para sincronización continua
+- [x] Detectar 1383 archivos Markdown
+- [x] Arreglar encoding y nulls
+- [x] Validar con 100 notas - EXITOSO
+- [x] **Eliminar notas de Neo4j** (pipeline básico insuficiente)
+- [ ] **Diseñar agente de transformación Cypher** (DT-008)
+- [ ] Implementar pipeline enriquecido con agente
+
+### Decisión Técnica DT-008
+Pipeline básico funciona pero no optimiza para Cypher. Se requiere agente intermedio (Pi) que:
+1. Extraiga entidades (Personas, Lugares, Eventos)
+2. Clasifique tipo de nota
+3. Detecte relaciones semánticas
+4. Genere Cypher optimizado
+
+Neo4j está limpio (0 nodos) esperando versión enriquecida.
 
 ### Fase: Mirror Pipeline - COMPLETADA (template)
 - [x] Implementar parser Markdown completo (frontmatter, wikilinks, tags)
